@@ -1,0 +1,30 @@
+{
+  "name": "server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "seed": "node seed/seedAll.js",
+    "dev": "nodemon index.js",
+    "start": "node index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^9.6.3",
+    "multer": "^2.1.1",
+    "nodemon": "^3.1.14",
+    "qrcode": "^1.5.4",
+    "slugify": "^1.6.9",
+    "speakeasy": "^2.0.0",
+    "joi": "^17.13.3",
+    "compression": "^1.7.4"
+  }
+}
