@@ -40,3 +40,4 @@ app.get('/',(req,res)=>{
 // ── Error handler
 app.use(require('./middleware/errorHandler'));
 
+module.exports = index;
