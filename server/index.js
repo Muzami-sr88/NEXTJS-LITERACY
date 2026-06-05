@@ -34,9 +34,9 @@ app.use("/api/bookmarks", bookmarkRoutes);
 
 // ── Health check
 app.get('/api/health', (_, res) => res.json({ ok: true, time: new Date() }));
-
+app.get('/',(req,res)=>{
+    res.send("work")
+})
 // ── Error handler
 app.use(require('./middleware/errorHandler'));
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
