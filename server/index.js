@@ -9,7 +9,30 @@ connectDB();
 
 const app = express();
 
-app.use(cors({ origin: ['http://localhost:3000', 'http://192.168.1.247:3000'] }));
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://192.168.1.247:3000',
+  'https://nextjs-literacy-weld.vercel.app',
+  'https://nextjs-literacy-nphh-9tf8iuein-muzamil-s-projects3.vercel.app',
+];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true);
+
+    if (
+      allowedOrigins.includes(origin) ||
+      origin.endsWith('.vercel.app')
+    ) {
+      return callback(null, true);
+    }
+
+    return callback(new Error('Not allowed by CORS'));
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
+}));
 app.use(compression());
 app.use(express.json({ limit: '1mb' }));
 
