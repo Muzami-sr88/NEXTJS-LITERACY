@@ -1,5 +1,3 @@
-
-
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -156,7 +154,6 @@ const literaryTermsData = {
       { name: 'Personification', slug: 'personification' }
     ]
   },
-  // Add more terms as needed
 };
 
 const LiteraryTermDetail = ({ slug }) => {
@@ -168,7 +165,9 @@ const LiteraryTermDetail = ({ slug }) => {
   const { Toast, showToast } = useActionToast();
 
   const searchParams = useSearchParams();
+
   const categoryFromQuery = searchParams?.get('category');
+
   const backHref = categoryFromQuery && categoryFromQuery !== 'All'
     ? `/literary-terms?category=${encodeURIComponent(categoryFromQuery)}`
     : '/literary-terms';
@@ -178,8 +177,11 @@ const LiteraryTermDetail = ({ slug }) => {
     async function fetchTerm() {
       try {
         setLoading(true);
+
         const response = await fetch(`${API}/literary-terms/${encodeURIComponent(slug)}`);
+
         const contentType = response.headers.get('content-type') || '';
+
         if (!contentType.includes('application/json')) {
           throw new Error('Backend returned HTML instead of JSON. Check the API URL and backend server.');
         }
@@ -187,32 +189,77 @@ const LiteraryTermDetail = ({ slug }) => {
         const result = await response.json();
 
         if (response.ok && result.data) {
-          // Merge API data with local sample fallbacks where useful.
           const apiTerm = result.data;
+
           const lookupKey = (slug || '').toLowerCase();
           const altKey = lookupKey.replace(/\s+/g, '-');
-          const sample = literaryTermsData[lookupKey] || literaryTermsData[altKey] || literaryTermsData[slug];
+
+          const sample =
+            literaryTermsData[lookupKey] ||
+            literaryTermsData[altKey] ||
+            literaryTermsData[slug];
+
           const content = apiTerm.content || {};
+
+          /*
+            FIX:
+            Admin rich editor saves HTML like:
+            content: { definition: "<b><i>dsadas</i></b>" }
+
+            So here we correctly read content.definition.
+          */
+          const definitionHtml =
+            typeof apiTerm.content === 'string'
+              ? apiTerm.content
+              : content.definition || apiTerm.definition || '';
+
           const examplesHtml = Array.isArray(content.examples)
-            ? content.examples.map((ex) => `<h3>${ex.heading || ''}</h3><p>${ex.body || ''}</p>`).join('')
-            : (typeof apiTerm.examples === 'string' ? apiTerm.examples : '');
+            ? content.examples
+                .map((ex) => `<h3>${ex.heading || ''}</h3><p>${ex.body || ''}</p>`)
+                .join('')
+            : typeof apiTerm.examples === 'string'
+              ? apiTerm.examples
+              : '';
 
           const mergedTerm = {
             ...apiTerm,
-            definition: apiTerm.definition || content.definition || sample?.definition || apiTerm.excerpt || '',
-            simplified_definition: apiTerm.simplified_definition || apiTerm.simplifiedDefinition || content.simplifiedDef || sample?.simplifiedDefinition || '',
-            content: typeof apiTerm.content === 'string' ? apiTerm.content : '',
+
+            definition:
+              definitionHtml ||
+              sample?.definition ||
+              apiTerm.excerpt ||
+              '',
+
+            simplified_definition:
+              apiTerm.simplified_definition ||
+              apiTerm.simplifiedDefinition ||
+              content.simplifiedDef ||
+              sample?.simplifiedDefinition ||
+              '',
+
+            content: definitionHtml,
+
             examples: examplesHtml || sample?.examples || '',
-            relatedTerms: Array.isArray(content.relatedTerms) && content.relatedTerms.length > 0
-              ? content.relatedTerms.map((t) => typeof t === 'string' ? { name: t, slug: t.toLowerCase().replace(/[^a-z0-9]+/g, '-') } : t)
-              : (apiTerm.relatedTerms && apiTerm.relatedTerms.length > 0 ? apiTerm.relatedTerms : (sample && sample.relatedTerms) || []),
+
+            relatedTerms:
+              Array.isArray(content.relatedTerms) && content.relatedTerms.length > 0
+                ? content.relatedTerms.map((t) =>
+                    typeof t === 'string'
+                      ? {
+                          name: t,
+                          slug: t.toLowerCase().replace(/[^a-z0-9]+/g, '-')
+                        }
+                      : t
+                  )
+                : apiTerm.relatedTerms && apiTerm.relatedTerms.length > 0
+                  ? apiTerm.relatedTerms
+                  : (sample && sample.relatedTerms) || [],
           };
 
           setTerm(mergedTerm);
         } else {
-          // Fallback: create a default term object with properly formatted title
           const formattedTitle = slug
-            .replace(/,\s*$/, '') // Remove trailing comma
+            .replace(/,\s*$/, '')
             .split(/[-_]/)
             .map(word => word.charAt(0).toUpperCase() + word.slice(1))
             .join(' ');
@@ -227,9 +274,8 @@ const LiteraryTermDetail = ({ slug }) => {
           });
         }
       } catch (error) {
-        // Use fallback with formatted title
         const formattedTitle = slug
-          .replace(/,\s*$/, '') // Remove trailing comma
+          .replace(/,\s*$/, '')
           .split(/[-_]/)
           .map(word => word.charAt(0).toUpperCase() + word.slice(1))
           .join(' ');
@@ -246,9 +292,9 @@ const LiteraryTermDetail = ({ slug }) => {
         setLoading(false);
       }
     }
+
     fetchTerm();
   }, [slug]);
-
 
   async function handleBookmark() {
     const token = typeof window !== 'undefined' ? localStorage.getItem('lp_token') : '';
@@ -286,7 +332,6 @@ const LiteraryTermDetail = ({ slug }) => {
 
   const tabs = ['Definition', 'Examples', 'Function', 'Resources'];
 
-  // Popular terms fallback (used when API doesn't provide popularTerms)
   const popularTermsFallback = [
     { name: 'Metaphor', slug: 'metaphor' },
     { name: 'Simile', slug: 'simile' },
@@ -297,11 +342,10 @@ const LiteraryTermDetail = ({ slug }) => {
     { name: 'Allegory', slug: 'allegory' }
   ];
 
-  // Handle search submission
   const handleSearch = (e) => {
     e.preventDefault();
+
     if (searchQuery.trim()) {
-      // Navigate to search results or filter terms
       window.location.href = `/literary-terms?search=${encodeURIComponent(searchQuery)}`;
     }
   };
@@ -328,7 +372,9 @@ const LiteraryTermDetail = ({ slug }) => {
         {Toast}
         <Navbar />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
-          <h1 className="text-3xl font-bold text-[#07294e] mb-4">Term Not Found</h1>
+          <h1 className="text-3xl font-bold text-[#07294e] mb-4">
+            Term Not Found
+          </h1>
           <Link href="/literary-terms" className="text-[#b5d56a] hover:underline">
             ← Back to Literary Terms
           </Link>
@@ -341,28 +387,31 @@ const LiteraryTermDetail = ({ slug }) => {
   return (
     <>
       {Toast}
+
       <Navbar />
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
-        <Link href={backHref} className="text-sm text-[#07294e] hover:underline">← Back to list</Link>
+        <Link href={backHref} className="text-sm text-[#07294e] hover:underline">
+          ← Back to list
+        </Link>
       </div>
 
       {/* Hero Section with Title */}
       <section
-   className="
+        className="
           relative text-white
           flex items-center justify-center
           min-h-[40vh] sm:min-h-[45vh] md:min-h-[50vh]
         "
       >
-
-
         {/* Bookmark Button - Top Right Corner */}
         <button
           onClick={handleBookmark}
-     className={`absolute top-10 right-6 sm:top-16 sm:right-8 md:top-20 md:right-10 p-3 rounded-md transition-colors z-20 ${isBookmarked
-            ? 'bg-[#b5d56a] text-[#07294e]'
-            : 'bg-[#b5d56a] text-[#07294e] hover:bg-[#a0c555]'
-            }`}
+          className={`absolute top-10 right-6 sm:top-16 sm:right-8 md:top-20 md:right-10 p-3 rounded-md transition-colors z-20 ${
+            isBookmarked
+              ? 'bg-[#b5d56a] text-[#07294e]'
+              : 'bg-[#b5d56a] text-[#07294e] hover:bg-[#a0c555]'
+          }`}
           aria-label={isBookmarked ? 'Remove bookmark' : 'Bookmark this page'}
         >
           <Bookmark className={`w-5 h-5 ${isBookmarked ? 'fill-current' : ''}`} />
@@ -384,10 +433,11 @@ const LiteraryTermDetail = ({ slug }) => {
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-           className={`text-base font-medium transition-colors pb-1 ${activeTab === tab
-                  ? 'text-[#07294e] border-b-2 border-[#07294e]'
-                  : 'text-[#07294e]/70 hover:text-[#07294e]'
-                  }`}
+                className={`text-base font-medium transition-colors pb-1 ${
+                  activeTab === tab
+                    ? 'text-[#07294e] border-b-2 border-[#07294e]'
+                    : 'text-[#07294e]/70 hover:text-[#07294e]'
+                }`}
               >
                 {tab}
               </button>
@@ -412,11 +462,14 @@ const LiteraryTermDetail = ({ slug }) => {
                     <h2 className="text-2xl font-bold text-[#07294e] mb-4">
                       What is {term.title}?
                     </h2>
+
                     {term.definition && (
-                      <p className="text-gray-800 leading-relaxed text-[15px] mb-4">
-                        {term.definition}
-                      </p>
+                      <div
+                        className="prose prose-lg max-w-none text-gray-800 leading-relaxed mb-4"
+                        dangerouslySetInnerHTML={{ __html: term.definition }}
+                      />
                     )}
+
                     {term.excerpt && !term.definition && (
                       <p className="text-gray-800 leading-relaxed text-[15px] mb-4">
                         {term.excerpt}
@@ -436,11 +489,11 @@ const LiteraryTermDetail = ({ slug }) => {
                     </div>
                   )}
 
-                  {/* Main Content from Database */}
-                  {term.content && (
+                  {/* Main Content from Database - only show if it is different */}
+                  {term.content && term.content !== term.definition && (
                     <div className="mb-10 prose prose-lg max-w-none">
                       <div
-                   className="text-gray-800 leading-relaxed"
+                        className="text-gray-800 leading-relaxed"
                         dangerouslySetInnerHTML={{ __html: term.content }}
                       />
                     </div>
@@ -454,13 +507,16 @@ const LiteraryTermDetail = ({ slug }) => {
                   <h2 className="text-2xl font-bold text-[#07294e] mb-4">
                     Examples of {term.title}
                   </h2>
+
                   {term.examples ? (
                     <div
-                 className="text-gray-800 leading-relaxed prose prose-lg max-w-none"
+                      className="text-gray-800 leading-relaxed prose prose-lg max-w-none"
                       dangerouslySetInnerHTML={{ __html: term.examples }}
                     />
                   ) : (
-                    <p className="text-gray-600 italic">Examples will be available soon.</p>
+                    <p className="text-gray-600 italic">
+                      Examples will be available soon.
+                    </p>
                   )}
                 </div>
               )}
@@ -471,13 +527,16 @@ const LiteraryTermDetail = ({ slug }) => {
                   <h2 className="text-2xl font-bold text-[#07294e] mb-4">
                     Function of {term.title}
                   </h2>
+
                   {term.function ? (
                     <div
-                 className="text-gray-800 leading-relaxed prose prose-lg max-w-none"
+                      className="text-gray-800 leading-relaxed prose prose-lg max-w-none"
                       dangerouslySetInnerHTML={{ __html: term.function }}
                     />
                   ) : (
-                    <p className="text-gray-600 italic">Function information will be available soon.</p>
+                    <p className="text-gray-600 italic">
+                      Function information will be available soon.
+                    </p>
                   )}
                 </div>
               )}
@@ -488,23 +547,27 @@ const LiteraryTermDetail = ({ slug }) => {
                   <h2 className="text-2xl font-bold text-[#07294e] mb-4">
                     Resources for {term.title}
                   </h2>
+
                   {term.resources ? (
                     <div
-                 className="text-gray-800 leading-relaxed prose prose-lg max-w-none"
+                      className="text-gray-800 leading-relaxed prose prose-lg max-w-none"
                       dangerouslySetInnerHTML={{ __html: term.resources }}
                     />
                   ) : (
-                    <p className="text-gray-600 italic">Additional resources will be available soon.</p>
+                    <p className="text-gray-600 italic">
+                      Additional resources will be available soon.
+                    </p>
                   )}
                 </div>
               )}
 
-              {/* Detailed Sections (fallback for hardcoded data) - only show in Definition tab */}
+              {/* Detailed Sections fallback for hardcoded data */}
               {activeTab === 'Definition' && term.detailedSections && term.detailedSections.map((section, index) => (
                 <div key={index} className="mb-10">
                   <h2 className="text-2xl font-bold text-[#07294e] mb-4">
                     {section.heading}
                   </h2>
+
                   {section.content.map((contentBlock, idx) => (
                     <div key={idx} className="mb-4">
                       {contentBlock.type === 'paragraph' && (
@@ -512,6 +575,7 @@ const LiteraryTermDetail = ({ slug }) => {
                           {contentBlock.text}
                         </p>
                       )}
+
                       {contentBlock.type === 'list' && (
                         <ul className="list-disc list-outside space-y-3 text-gray-800 ml-6 mb-4">
                           {contentBlock.items.map((item, itemIdx) => (
@@ -539,11 +603,12 @@ const LiteraryTermDetail = ({ slug }) => {
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       placeholder="Search"
-                 className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#b5d56a] focus:border-transparent text-gray-700 placeholder-gray-400"
+                      className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#b5d56a] focus:border-transparent text-gray-700 placeholder-gray-400"
                     />
+
                     <button
                       type="submit"
-                 className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 hover:bg-gray-100 rounded-md transition-colors"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 hover:bg-gray-100 rounded-md transition-colors"
                       aria-label="Search"
                     >
                       <Search className="w-5 h-5 text-gray-500" />
@@ -553,8 +618,8 @@ const LiteraryTermDetail = ({ slug }) => {
 
                 {/* Upgrade to Literary Palace Plus */}
                 <div
-             className="relative bg-[#f4f4f4] border-2 border-[#b5d56a] p-6 flex flex-col justify-between
-  opacity-0 translate-y-5 animate-[fadeUp_0.6s_ease-out_forwards]"
+                  className="relative bg-[#f4f4f4] border-2 border-[#b5d56a] p-6 flex flex-col justify-between
+                  opacity-0 translate-y-5 animate-[fadeUp_0.6s_ease-out_forwards]"
                 >
                   <div>
                     <h3 className="text-xl md:text-2xl mt-4 -mb-2 font-bold text-[#07294e] text-center">
@@ -568,7 +633,7 @@ const LiteraryTermDetail = ({ slug }) => {
                           alt="Literary Palace"
                           width={160}
                           height={50}
-                     className="h-10 w-auto object-contain"
+                          className="h-10 w-auto object-contain"
                         />
 
                         <span className="absolute top-2 right-4 text-[11px] md:text-[11px] font-merriweather text-[#07294e] uppercase">
@@ -587,7 +652,7 @@ const LiteraryTermDetail = ({ slug }) => {
                       alt="A+"
                       width={56}
                       height={56}
-                 className="absolute top-2 right-1 h-11 w-11 object-contain z-30"
+                      className="absolute top-2 right-1 h-11 w-11 object-contain z-30"
                     />
 
                     <div className="flex items-center justify-center mb-6">
@@ -596,7 +661,7 @@ const LiteraryTermDetail = ({ slug }) => {
                         alt="Upgrade illustration"
                         width={170}
                         height={170}
-                   className="w-55 h-auto object-contain"
+                        className="w-55 h-auto object-contain"
                       />
                     </div>
                   </div>
@@ -610,33 +675,39 @@ const LiteraryTermDetail = ({ slug }) => {
 
                 {/* Can't find the insight you need? */}
                 <div className="bg-[#b5d56a] py-7 px-6 w-full flex flex-col items-center justify-center text-[#07294e] shadow-sm">
-                  <p className="text-sm font-medium mb-5">Can&apos;t find the insight you need?</p>
+                  <p className="text-sm font-medium mb-5">
+                    Can&apos;t find the insight you need?
+                  </p>
                   <button className="bg-[#07294e] text-white px-4 py-2 rounded-md text-sm font-medium hover:opacity-95 transition cursor-pointer -mb-2">
                     Request for Insight
                   </button>
                 </div>
 
-                {/* Related Literary Terms (Compact Card — matches design) */}
+                {/* Related Literary Terms */}
                 {term.relatedTerms && term.relatedTerms.length > 0 && (
                   <div className="overflow-hidden rounded-lg border border-gray-200 shadow-sm">
                     <div className="bg-[#07294e] px-4 py-2">
-                      <h3 className="text-sm font-semibold text-white">Related Literary Terms</h3>
+                      <h3 className="text-sm font-semibold text-white">
+                        Related Literary Terms
+                      </h3>
                     </div>
+
                     <div className="bg-white">
                       {term.relatedTerms.map((relatedTerm, index) => (
                         <Link
                           key={index}
                           href={`/literary-terms/${relatedTerm.slug}`}
-                     className="block text-sm text-[#07294e] px-4 py-2 border-t border-[#eaf3d8] hover:bg-white transition-colors"
+                          className="block text-sm text-[#07294e] px-4 py-2 border-t border-[#eaf3d8] hover:bg-white transition-colors"
                         >
                           {relatedTerm.name}
                         </Link>
                       ))}
                     </div>
+
                     <div className="p-2 bg-white">
                       <Link
                         href="/literary-terms"
-                   className="block text-center bg-[#b5d56a] text-[#07294e] px-3 py-2 rounded-sm font-semibold hover:bg-[#a0c555] transition-colors"
+                        className="block text-center bg-[#b5d56a] text-[#07294e] px-3 py-2 rounded-sm font-semibold hover:bg-[#a0c555] transition-colors"
                       >
                         See All Literary Terms
                       </Link>
@@ -644,26 +715,33 @@ const LiteraryTermDetail = ({ slug }) => {
                   </div>
                 )}
 
-                {/* Popular Literary Terms (Compact List) */}
+                {/* Popular Literary Terms */}
                 <div className="overflow-hidden rounded-lg border border-gray-200 shadow-sm mt-6">
                   <div className="bg-[#07294e] px-4 py-2">
-                    <h3 className="text-sm font-semibold text-white">Popular Literary Terms</h3>
+                    <h3 className="text-sm font-semibold text-white">
+                      Popular Literary Terms
+                    </h3>
                   </div>
+
                   <div className="bg-white">
-                    {(term.popularTerms && term.popularTerms.length > 0 ? term.popularTerms : popularTermsFallback).map((popTerm, idx) => (
+                    {(term.popularTerms && term.popularTerms.length > 0
+                      ? term.popularTerms
+                      : popularTermsFallback
+                    ).map((popTerm, idx) => (
                       <Link
                         key={idx}
                         href={`/literary-terms/${popTerm.slug}`}
-                   className="block text-sm text-[#07294e] px-4 py-2 border-t border-[#eaf3d8] hover:bg-white transition-colors"
+                        className="block text-sm text-[#07294e] px-4 py-2 border-t border-[#eaf3d8] hover:bg-white transition-colors"
                       >
                         {popTerm.name}
                       </Link>
                     ))}
                   </div>
+
                   <div className="p-2 bg-white">
                     <Link
                       href="/literary-terms"
-                 className="block text-center bg-[#b5d56a] text-[#07294e] px-3 py-2 rounded-sm font-semibold hover:bg-[#a0c555] transition-colors"
+                      className="block text-center bg-[#b5d56a] text-[#07294e] px-3 py-2 rounded-sm font-semibold hover:bg-[#a0c555] transition-colors"
                     >
                       See All Literary Terms
                     </Link>
@@ -671,6 +749,7 @@ const LiteraryTermDetail = ({ slug }) => {
                 </div>
               </div>
             </aside>
+
           </div>
         </div>
       </section>
