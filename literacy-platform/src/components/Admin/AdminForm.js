@@ -54,48 +54,56 @@ const AdminForm = ({ onCreated }) => {
 
       {/* Title Field */}
       <div className="space-y-1">
-        <label className="block text-sm font-semibold text-[#07294e]">Title <span className="text-red-500">*</span></label>
+        <label className="block text-sm font-semibold text-[#07294e]">
+          Title <span className="text-red-500">*</span>
+        </label>
         <input 
           required 
           value={title} 
           onChange={(e) => setTitle(e.target.value)} 
           placeholder="Enter the term title (e.g., Metaphor, Alliteration)"
-          className="w-full border border-gray-300 px-4 py-3 rounded-lg focus:outline-none focus:border-[#07294e] focus:ring-1 focus:ring-[#07294e] text-gray-700 placeholder-gray-400 transition"
+          className="w-full border border-gray-300 px-4 py-3 rounded-lg bg-white text-gray-800 placeholder:text-gray-500 focus:outline-none focus:border-[#07294e] focus:ring-1 focus:ring-[#07294e] transition"
         />
       </div>
 
       {/* Slug Field */}
       <div className="space-y-1">
-        <label className="block text-sm font-semibold text-[#07294e]">Slug <span className="text-gray-400 text-xs">(optional)</span></label>
+        <label className="block text-sm font-semibold text-[#07294e]">
+          Slug <span className="text-gray-400 text-xs">(optional)</span>
+        </label>
         <input 
           value={slug} 
           onChange={(e) => setSlug(e.target.value)} 
           placeholder="Leave blank to auto-generate from title"
-          className="w-full border border-gray-300 px-4 py-3 rounded-lg focus:outline-none focus:border-[#07294e] focus:ring-1 focus:ring-[#07294e] text-gray-700 placeholder-gray-400 transition"
+          className="w-full border border-gray-300 px-4 py-3 rounded-lg bg-white text-gray-800 placeholder:text-gray-500 focus:outline-none focus:border-[#07294e] focus:ring-1 focus:ring-[#07294e] transition"
         />
       </div>
 
       {/* Excerpt Field */}
       <div className="space-y-1">
-        <label className="block text-sm font-semibold text-[#07294e]">Excerpt</label>
+        <label className="block text-sm font-semibold text-[#07294e]">
+          Excerpt
+        </label>
         <textarea 
           value={excerpt} 
           onChange={(e) => setExcerpt(e.target.value)} 
           placeholder="Write a short summary or introduction for this term"
-          className="w-full border border-gray-300 px-4 py-3 rounded-lg focus:outline-none focus:border-[#07294e] focus:ring-1 focus:ring-[#07294e] text-gray-700 placeholder-gray-400 transition"
+          className="w-full border border-gray-300 px-4 py-3 rounded-lg bg-white text-gray-800 placeholder:text-gray-500 focus:outline-none focus:border-[#07294e] focus:ring-1 focus:ring-[#07294e] transition"
           rows={3}
         />
       </div>
 
       {/* Content Field */}
       <div className="space-y-1">
-        <label className="block text-sm font-semibold text-[#07294e]">Definition / Content <span className="text-red-500">*</span></label>
+        <label className="block text-sm font-semibold text-[#07294e]">
+          Definition / Content <span className="text-red-500">*</span>
+        </label>
         <textarea 
           required
           value={content} 
           onChange={(e) => setContent(e.target.value)} 
           placeholder="Provide a detailed definition, explanation, or full content for this literary term"
-          className="w-full border border-gray-300 px-4 py-3 rounded-lg focus:outline-none focus:border-[#07294e] focus:ring-1 focus:ring-[#07294e] text-gray-700 placeholder-gray-400 transition"
+          className="w-full border border-gray-300 px-4 py-3 rounded-lg bg-white text-gray-800 placeholder:text-gray-500 focus:outline-none focus:border-[#07294e] focus:ring-1 focus:ring-[#07294e] transition"
           rows={8}
         />
       </div>
