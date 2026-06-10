@@ -1,443 +1,762 @@
 "use client";
 
-import { useEffect, useState, useRef } from 'react';
-import {
-  Search, Plus, Edit2, Trash2, X, Save,
-  Filter, BookOpen, Calendar, Hash,
-  Bold, Italic, List, ListOrdered,
-  Link as LinkIcon, Heading1, Heading2, Quote, Loader2
-} from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
+import Image from 'next/image';
+import Link from 'next/link';
+import Navbar from '@/components/sharedComponents/Navbar';
+import Footer from '@/components/sharedComponents/Footer';
+import { BookOpen, Share2, Printer, Download, Bookmark, ChevronRight, Search } from 'lucide-react';
+import { toggleBookmark } from '@/lib/bookmarkApi';
+import { useActionToast } from '@/components/sharedComponents/ActionToast';
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
-function getToken() {
-  return typeof window !== 'undefined' ? localStorage.getItem('admin_token') || '' : '';
-}
+// Sample data - replace with actual API call or database query
+const literaryTermsData = {
+  'allusion': {
+    title: 'Allusion',
+    category: 'Definition',
+    definition: 'An allusion is a subtle reference to a person, place, event, story or work of art that writers use to create a richer text by adding layers of meaning. When a poet mentions "opening Pandora\'s box," they are not telling the entire story or using a simile or metaphor, but are letting the reader understand what happened through the well-known myth.',
+    simplifiedDefinition: 'An allusion in an artistic work is a reference to a person, place, object, or event for the purpose of making a connection with readers.',
+    detailedSections: [
+      {
+        heading: 'Examples of Allusion in Literature',
+        content: [
+          {
+            type: 'paragraph',
+            text: 'Writers across centuries have used allusion to convey layered meaning:'
+          },
+          {
+            type: 'list',
+            items: [
+              'In Mary Shelley\'s Frankenstein, the monster alludes to Adam in the Garden of Eden. Like the first man, he is passage of knowledge in his mythic figure described.',
+              'A Shakespeare play to spice up a character\'s dialogue with the culture of the modern world.',
+              'In Harper Lee\'s To Kill a Mockingbird, Scout alludes to the tale of Boo Radley, which in the novel has become a single reference that carries meaning without overt explanation.',
+              'These examples demonstrate how a single reference can carry significant weight in the text, relying on the reader\'s knowledge to decode the allusion\'s full meaning.'
+            ]
+          }
+        ]
+      },
+      {
+        heading: 'Purpose and Function of Allusion',
+        content: [
+          {
+            type: 'paragraph',
+            text: 'Allusion lets writers employ fewer words while still adding depth to the text. It allows them to communicate with readers in a mutually understood language. Rather than explaining history, mythology, or literature, writers use allusions to convey ideas, creating a shared experience with the reader.'
+          },
+          {
+            type: 'paragraph',
+            text: 'Your partner in "jail style" immediately communicates where or intimately he started. In that text—what makes allusion allusive is that it relies on shared background knowledge.'
+          },
+          {
+            type: 'paragraph',
+            text: 'Moreover, allusion often has what a text is a specific cultural or historical context. When readers detect an allusion the text—and the author—feel more accessible.'
+          }
+        ]
+      },
+      {
+        heading: 'Types of Allusion',
+        content: [
+          {
+            type: 'paragraph',
+            text: 'There are different types of allusions because there are so different fields to reference:'
+          },
+          {
+            type: 'list',
+            items: [
+              'Historical Allusion: References to historical events or figures, such as "meeting his Waterloo" or "a real Benedict Arnold."',
+              'Biblical Allusion: References to stories from religious texts, like "the prodigal son" or "David vs. Goliath."',
+              'Mythological Allusion: References to popular myths, songs, or films, for example, "Don sing like a Siren."',
+              'Literary Allusion: References to other texts or authors, such as "it was a Shakespearean tragedy."'
+            ]
+          }
+        ]
+      },
+      {
+        heading: 'Why Writers Use Allusions',
+        content: [
+          {
+            type: 'paragraph',
+            text: 'Writers use allusions to create depth, connect their work to shared knowledge, and make the reader feel smart in recognizing references. Allusion is a tool that writers use to condense meaning, create atmosphere, and link their work to larger cultural narratives in philosophy and history—qualities that turn a simple story into a multidimensional experience.'
+          },
+          {
+            type: 'paragraph',
+            text: 'Allusion allows authors to create meaning without explicitly explaining everything. Instead of saying "the character felt betrayed," a writer alludes to something familiar: the text gains richness, subtlety, and nuance.'
+          }
+        ]
+      },
+      {
+        heading: 'Difference Between Allusion and Reference',
+        content: [
+          {
+            type: 'paragraph',
+            text: 'While both terms suggest pointing to something outside the text, there\'s a clear difference. A reference directly names something the reader should know, while an allusion hints at it. For instance, T.S. Eliot\'s "The Waste Land" is a reference, saying, "He was a sad Scrooge about money." Is an allusion. The direct mention asks the reader to retrieve knowledge, and the veiled mention asks them to recognize it.'
+          }
+        ]
+      },
+      {
+        heading: 'How to Identify an Allusion',
+        content: [
+          {
+            type: 'paragraph',
+            text: 'To recognize an allusion, look for references that seem familiar but aren\'t fully explained. If a character says, "I felt like Sisyphus," without the author defining it beyond the story or myth, a historical event, a famous figure, a prior text—or a famous event—it\'s likely an allusion. The context will typically give you enough clues to understand the reference.'
+          }
+        ]
+      },
+      {
+        heading: 'Famous Allusions in Modern Culture',
+        content: [
+          {
+            type: 'paragraph',
+            text: 'Ancient and modern literature and pop culture overlap when modern texts allude to classic works. Phrases like "the Midas Touch," "Achilles\' heel," or "Pandora\'s box" for naming stories are all moments. Even pop lyrics, films, and even memes use allusion to create layers of meaning—showing how this technique continues to be relevant today.'
+          }
+        ]
+      },
+      {
+        heading: 'Conclusion',
+        content: [
+          {
+            type: 'paragraph',
+            text: 'Allusion is one of the most powerful tools in literature. It allows writers to connect their work to broader conversations—across history, art, and imagination. Every great writer—from Shakespeare to Toni Morrison—has used allusions to craft work that feels both immediate and eternal. Whether you\'re analyzing a text or creating one, understanding the relationship between the writer, the reader, and the world itself.'
+          }
+        ]
+      },
+      {
+        heading: 'Other Helpful Allusion Resources',
+        content: [
+          {
+            type: 'list',
+            items: [
+              'The Wikipedia Page for Allusion: a complete breakdown and also in-depth entry on allusion, but it has more plot examples.',
+              'The Dictionary Definition of Allusion: A basic definition, with a bit of history behind the word.',
+              'Allusion in Poetry: Poetry Foundation has an excellent article in which bold authors use to "tell" their tales with other words. It also explores some of the theoretical underpinnings of poetic allusion as a stylistic and cultural strategy.',
+              'Allusion in Pop Culture: This Buzzfeed article lists "27 Smart Ways" TV Is Using Allusion: along with discussion of its relationship to a whole something some reason.',
+              'Allusion in Film: Check out this article "Allusions? What A Not-so-subtlety Easter Egg Reference."',
+              'From Magazine: List of Movies that Tip Things to Other Movies: which doesn\'t use the word "allusion" regularly, that\'s what these kinds of "Easter eggs" or references are doing in TV, film, books, videos, or musical allusion to another classic movie, and most major religions (requires it.'
+            ]
+          }
+        ]
+      }
+    ],
+    relatedTerms: [
+      { name: 'Metaphor', slug: 'metaphor' },
+      { name: 'Simile', slug: 'simile' },
+      { name: 'Symbolism', slug: 'symbolism' },
+      { name: 'Imagery', slug: 'imagery' },
+      { name: 'Motif', slug: 'motif' },
+      { name: 'Theme', slug: 'theme' },
+      { name: 'Irony', slug: 'irony' },
+      { name: 'Tone', slug: 'tone' },
+      { name: 'Foreshadowing', slug: 'foreshadowing' },
+      { name: 'Allegory', slug: 'allegory' },
+      { name: 'Paradox', slug: 'paradox' },
+      { name: 'Personification', slug: 'personification' }
+    ]
+  },
+};
 
-function authHeaders() {
-  return {
-    'Content-Type': 'application/json',
-    Authorization: `Bearer ${getToken()}`,
-  };
-}
-
-// ── Rich Text Editor ──────────────────────────────────────────
-function RichTextEditor({ value, onChange, placeholder }) {
-  const editorRef = useRef(null);
-
-  const applyFormat = (command, val = null) => {
-    document.execCommand(command, false, val);
-    editorRef.current?.focus();
-  };
-
-  const handleInput = () => {
-    if (editorRef.current) onChange(editorRef.current.innerHTML);
-  };
-
-  useEffect(() => {
-    if (editorRef.current && value !== editorRef.current.innerHTML) {
-      editorRef.current.innerHTML = value || '';
-    }
-  }, [value]);
-
-  return (
-    <div className="border border-gray-300 rounded-lg overflow-hidden bg-white">
-      <div className="flex flex-wrap items-center gap-1 p-2 bg-gray-50 border-b border-gray-300">
-        <button type="button" onClick={() => applyFormat('bold')}    className="p-2 hover:bg-gray-200 rounded" title="Bold"><Bold size={18} /></button>
-        <button type="button" onClick={() => applyFormat('italic')}  className="p-2 hover:bg-gray-200 rounded" title="Italic"><Italic size={18} /></button>
-        <button type="button" onClick={() => applyFormat('underline')}  className="p-2 hover:bg-gray-200 rounded" title="Underline"><span className="font-bold underline text-sm">U</span></button>
-        <div className="w-px h-6 bg-gray-300 mx-1" />
-        <button type="button" onClick={() => applyFormat('formatBlock', '<h1>')} className="p-2 hover:bg-gray-200 rounded" title="H1"><Heading1 size={18} /></button>
-        <button type="button" onClick={() => applyFormat('formatBlock', '<h2>')} className="p-2 hover:bg-gray-200 rounded" title="H2"><Heading2 size={18} /></button>
-        <div className="w-px h-6 bg-gray-300 mx-1" />
-        <button type="button" onClick={() => applyFormat('insertUnorderedList')} className="p-2 hover:bg-gray-200 rounded" title="Bullet List"><List size={18} /></button>
-        <button type="button" onClick={() => applyFormat('insertOrderedList')} className="p-2 hover:bg-gray-200 rounded" title="Numbered List"><ListOrdered size={18} /></button>
-        <div className="w-px h-6 bg-gray-300 mx-1" />
-        <button type="button" onClick={() => applyFormat('formatBlock', '<blockquote>')} className="p-2 hover:bg-gray-200 rounded" title="Quote"><Quote size={18} /></button>
-        <button type="button"
-          onClick={() => { const url = prompt('Enter URL:'); if (url) applyFormat('createLink', url); }}
-     className="p-2 hover:bg-gray-200 rounded" title="Insert Link">
-          <LinkIcon size={18} />
-        </button>
-      </div>
-      <div
-        ref={editorRef}
-        contentEditable
-        onInput={handleInput}
-   className="min-h-[300px] p-4 outline-none prose prose-sm max-w-none"
-        style={{ whiteSpace: 'pre-wrap' }}
-        suppressContentEditableWarning
-      />
-      {!value && (
-        <div className="absolute top-14 left-4 text-gray-400 pointer-events-none text-sm">
-          {placeholder}
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ── Main Page ─────────────────────────────────────────────────
-export default function LiteraryTermsPage() {
-  const [terms,       setTerms]       = useState([]);
-  const [loading,     setLoading]     = useState(true);
-  const [saving,      setSaving]      = useState(false);
-  const [deleting,    setDeleting]    = useState(null);
+const LiteraryTermDetail = ({ slug }) => {
+  const [isBookmarked, setIsBookmarked] = useState(false);
+  const [activeTab, setActiveTab] = useState('Definition');
   const [searchQuery, setSearchQuery] = useState('');
-  const [showModal,   setShowModal]   = useState(false);
-  const [editingTerm, setEditingTerm] = useState(null);
-  const [toast,       setToast]       = useState(null);
-  const [formData,    setFormData]    = useState({
-    title: '', slug: '', excerpt: '', content: '',
-  });
+  const [term, setTerm] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const { Toast, showToast } = useActionToast();
 
-  // ── Fetch all terms from backend ──────────────────────────
-  async function loadTerms() {
-    setLoading(true);
+  const searchParams = useSearchParams();
+
+  const categoryFromQuery = searchParams?.get('category');
+
+  const backHref = categoryFromQuery && categoryFromQuery !== 'All'
+    ? `/literary-terms?category=${encodeURIComponent(categoryFromQuery)}`
+    : '/literary-terms';
+
+  // Fetch term data from database
+  useEffect(() => {
+    async function fetchTerm() {
+      try {
+        setLoading(true);
+
+        const response = await fetch(`${API}/literary-terms/${encodeURIComponent(slug)}`);
+
+        const contentType = response.headers.get('content-type') || '';
+
+        if (!contentType.includes('application/json')) {
+          throw new Error('Backend returned HTML instead of JSON. Check the API URL and backend server.');
+        }
+
+        const result = await response.json();
+
+        if (response.ok && result.data) {
+          const apiTerm = result.data;
+
+          const lookupKey = (slug || '').toLowerCase();
+          const altKey = lookupKey.replace(/\s+/g, '-');
+
+          const sample =
+            literaryTermsData[lookupKey] ||
+            literaryTermsData[altKey] ||
+            literaryTermsData[slug];
+
+          const content = apiTerm.content || {};
+
+          /*
+            FIX:
+            Admin rich editor saves HTML like:
+            content: { definition: "<b><i>dsadas</i></b>" }
+
+            So here we correctly read content.definition.
+          */
+          const definitionHtml =
+            typeof apiTerm.content === 'string'
+              ? apiTerm.content
+              : content.definition || apiTerm.definition || '';
+
+          const examplesHtml = Array.isArray(content.examples)
+            ? content.examples
+                .map((ex) => `<h3>${ex.heading || ''}</h3><p>${ex.body || ''}</p>`)
+                .join('')
+            : typeof apiTerm.examples === 'string'
+              ? apiTerm.examples
+              : '';
+
+          const mergedTerm = {
+            ...apiTerm,
+
+            definition:
+              definitionHtml ||
+              sample?.definition ||
+              apiTerm.excerpt ||
+              '',
+
+            simplified_definition:
+              apiTerm.simplified_definition ||
+              apiTerm.simplifiedDefinition ||
+              content.simplifiedDef ||
+              sample?.simplifiedDefinition ||
+              '',
+
+            content: definitionHtml,
+
+            examples: examplesHtml || sample?.examples || '',
+
+            relatedTerms:
+              Array.isArray(content.relatedTerms) && content.relatedTerms.length > 0
+                ? content.relatedTerms.map((t) =>
+                    typeof t === 'string'
+                      ? {
+                          name: t,
+                          slug: t.toLowerCase().replace(/[^a-z0-9]+/g, '-')
+                        }
+                      : t
+                  )
+                : apiTerm.relatedTerms && apiTerm.relatedTerms.length > 0
+                  ? apiTerm.relatedTerms
+                  : (sample && sample.relatedTerms) || [],
+          };
+
+          setTerm(mergedTerm);
+        } else {
+          const formattedTitle = slug
+            .replace(/,\s*$/, '')
+            .split(/[-_]/)
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(' ');
+
+          setTerm({
+            title: formattedTitle,
+            category: 'Definition',
+            definition: '',
+            simplified_definition: 'This literary term will be available soon.',
+            content: '',
+            relatedTerms: []
+          });
+        }
+      } catch (error) {
+        const formattedTitle = slug
+          .replace(/,\s*$/, '')
+          .split(/[-_]/)
+          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(' ');
+
+        setTerm({
+          title: formattedTitle,
+          category: 'Definition',
+          definition: '',
+          simplified_definition: 'This literary term will be available soon.',
+          content: '',
+          relatedTerms: []
+        });
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchTerm();
+  }, [slug]);
+
+  async function handleBookmark() {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('lp_token') : '';
+
+    if (!token) {
+      showToast('error', 'Please login first');
+      return;
+    }
+
+    if (!term?._id && !term?.id) {
+      showToast('error', 'This term is not available to bookmark yet');
+      return;
+    }
+
     try {
-      const res  = await fetch(`${API}/literary-terms?limit=200`);
-      const json = await res.json();
-      setTerms(json.data || []);
+      const result = await toggleBookmark({
+        articleId: term._id || term.id,
+        articleType: 'literary-term',
+        title: term.title,
+        slug: term.slug || slug,
+        image_url: term.image_url || '',
+        category: term.category || 'Literary Term',
+      });
+
+      if (result.success) {
+        setIsBookmarked(result.bookmarked);
+        showToast('success', result.bookmarked ? 'Article saved' : 'Article removed');
+      } else {
+        showToast('error', result.message || 'Bookmark failed');
+      }
     } catch {
-      showToast('error', 'Could not load terms. Is the backend running?');
-    } finally {
-      setLoading(false);
+      showToast('error', 'Could not update bookmark. Please try again.');
     }
   }
 
-  useEffect(() => { loadTerms(); }, []);
+  const tabs = ['Definition', 'Examples', 'Function', 'Resources'];
 
-  // ── Toast ─────────────────────────────────────────────────
-  function showToast(type, msg) {
-    setToast({ type, msg });
-    setTimeout(() => setToast(null), 3500);
-  }
+  const popularTermsFallback = [
+    { name: 'Metaphor', slug: 'metaphor' },
+    { name: 'Simile', slug: 'simile' },
+    { name: 'Symbolism', slug: 'symbolism' },
+    { name: 'Imagery', slug: 'imagery' },
+    { name: 'Irony', slug: 'irony' },
+    { name: 'Foreshadowing', slug: 'foreshadowing' },
+    { name: 'Allegory', slug: 'allegory' }
+  ];
 
-  // ── Filtered list ─────────────────────────────────────────
-  const filteredTerms = terms.filter(term =>
-    term.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    term.excerpt?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  // ── Open modal ────────────────────────────────────────────
-  function openModal(term = null) {
-    if (term) {
-      setEditingTerm(term);
-      setFormData({
-        title:   term.title   || '',
-        slug:    term.slug    || '',
-        excerpt: term.excerpt || '',
-        content: term.content?.definition || '',
-      });
-    } else {
-      setEditingTerm(null);
-      setFormData({ title: '', slug: '', excerpt: '', content: '' });
-    }
-    setShowModal(true);
-  }
-
-  function closeModal() {
-    setShowModal(false);
-    setEditingTerm(null);
-    setFormData({ title: '', slug: '', excerpt: '', content: '' });
-  }
-
-  // Auto-generate slug from title
-  function handleTitleChange(val) {
-    setFormData(prev => ({
-      ...prev,
-      title: val,
-      slug: editingTerm
-        ? prev.slug
-        : val.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
-    }));
-  }
-
-  // ── Submit (create or update) ─────────────────────────────
-  async function handleSubmit(e) {
+  const handleSearch = (e) => {
     e.preventDefault();
-    setSaving(true);
 
-    const payload = {
-      title:   formData.title,
-      slug:    formData.slug,
-      excerpt: formData.excerpt,
-      content: { definition: formData.content },
-    };
-
-    try {
-      const isEdit = !!editingTerm;
-      const url    = isEdit
-        ? `${API}/literary-terms/${editingTerm.slug}`
-        : `${API}/literary-terms`;
-      const method = isEdit ? 'PUT' : 'POST';
-
-      const res  = await fetch(url, {
-        method,
-        headers: authHeaders(),
-        body: JSON.stringify(payload),
-      });
-      const json = await res.json();
-
-      if (!json.success) throw new Error(json.message || 'Save failed');
-
-      showToast('success', isEdit ? 'Term updated!' : 'Term created!');
-      closeModal();
-      loadTerms();
-    } catch (err) {
-      showToast('error', err.message);
-    } finally {
-      setSaving(false);
+    if (searchQuery.trim()) {
+      window.location.href = `/literary-terms?search=${encodeURIComponent(searchQuery)}`;
     }
+  };
+
+  if (loading) {
+    return (
+      <>
+        {Toast}
+        <Navbar />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
+          <div className="animate-pulse">
+            <div className="h-8 bg-gray-200 rounded w-3/4 mx-auto mb-4"></div>
+            <div className="h-4 bg-gray-200 rounded w-1/2 mx-auto"></div>
+          </div>
+        </div>
+        <Footer />
+      </>
+    );
   }
 
-  // ── Delete ────────────────────────────────────────────────
-  async function handleDelete(term) {
-    if (!confirm(`Delete "${term.title}"? This cannot be undone.`)) return;
-    setDeleting(term._id);
-    try {
-      const res  = await fetch(`${API}/literary-terms/${term.slug}`, {
-        method:  'DELETE',
-        headers: authHeaders(),
-      });
-      const json = await res.json();
-      if (!json.success) throw new Error(json.message || 'Delete failed');
-      showToast('success', 'Term deleted.');
-      loadTerms();
-    } catch (err) {
-      showToast('error', err.message);
-    } finally {
-      setDeleting(null);
-    }
+  if (!term) {
+    return (
+      <>
+        {Toast}
+        <Navbar />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
+          <h1 className="text-3xl font-bold text-[#07294e] mb-4">
+            Term Not Found
+          </h1>
+          <Link href="/literary-terms" className="text-[#b5d56a] hover:underline">
+            ← Back to Literary Terms
+          </Link>
+        </div>
+        <Footer />
+      </>
+    );
   }
 
   return (
-    <div className="space-y-6">
+    <>
+      {Toast}
 
-      {/* Toast */}
-      {toast && (
-        <div className={`fixed top-4 right-4 z-50 px-5 py-3 rounded-xl shadow-lg text-sm font-semibold text-white transition-all ${
-          toast.type === 'success' ? 'bg-green-600' : 'bg-red-600'
-        }`}>
-          {toast.msg}
-        </div>
-      )}
+      <Navbar />
 
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Literary Terms</h1>
-          <p className="mt-1 text-sm text-gray-600">Manage and organize your literary terms collection</p>
-        </div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
+        <Link href={backHref} className="text-sm text-[#07294e] hover:underline">
+          ← Back to list
+        </Link>
+      </div>
+
+      {/* Hero Section with Title */}
+      <section
+        className="
+          relative text-white
+          flex items-center justify-center
+          min-h-[40vh] sm:min-h-[45vh] md:min-h-[50vh]
+        "
+      >
+        {/* Bookmark Button - Top Right Corner */}
         <button
-          onClick={() => openModal()}
-     className="inline-flex items-center gap-2 px-4 py-2 bg-[#07294e] text-white rounded-lg hover:bg-[#0a3461] transition-colors cursor-pointer"
+          onClick={handleBookmark}
+          className={`absolute top-10 right-6 sm:top-16 sm:right-8 md:top-20 md:right-10 p-3 rounded-md transition-colors z-20 ${
+            isBookmarked
+              ? 'bg-[#b5d56a] text-[#07294e]'
+              : 'bg-[#b5d56a] text-[#07294e] hover:bg-[#a0c555]'
+          }`}
+          aria-label={isBookmarked ? 'Remove bookmark' : 'Bookmark this page'}
         >
-          <Plus size={20} /> Add New Term
+          <Bookmark className={`w-5 h-5 ${isBookmarked ? 'fill-current' : ''}`} />
         </button>
-      </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center gap-3">
-            <div className="p-3 bg-blue-50 rounded-lg"><BookOpen className="text-blue-600" size={24} /></div>
-            <div>
-              <p className="text-sm text-gray-600">Total Terms</p>
-              <p className="text-2xl font-bold text-gray-900">{terms.length}</p>
-            </div>
-          </div>
+        {/* Content - Title positioned lower, aligned left */}
+        <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 sm:pt-20 md:pt-24">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold">
+            {term.title}
+          </h1>
         </div>
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center gap-3">
-            <div className="p-3 bg-green-50 rounded-lg"><Filter className="text-green-600" size={24} /></div>
-            <div>
-              <p className="text-sm text-gray-600">Filtered Results</p>
-              <p className="text-2xl font-bold text-gray-900">{filteredTerms.length}</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center gap-3">
-            <div className="p-3 bg-purple-50 rounded-lg"><Calendar className="text-purple-600" size={24} /></div>
-            <div>
-              <p className="text-sm text-gray-600">Last Updated</p>
-              <p className="text-lg font-bold text-gray-900">
-                {terms[0]?.createdAt ? new Date(terms[0].createdAt).toLocaleDateString() : '—'}
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
+      </section>
 
-      {/* Search */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-          <input
-            type="text"
-            placeholder="Search literary terms..."
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-       className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#07294e] focus:border-transparent outline-none"
-          />
-        </div>
-      </div>
-
-      {/* Table */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50 border-b border-gray-200">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Term</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Slug</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Excerpt</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {loading ? (
-                <tr>
-                  <td colSpan="4" className="px-6 py-12 text-center text-gray-500">
-                    <div className="flex items-center justify-center gap-2">
-                      <Loader2 className="w-5 h-5 animate-spin text-[#07294e]" />
-                      Loading from database...
-                    </div>
-                  </td>
-                </tr>
-              ) : filteredTerms.length === 0 ? (
-                <tr>
-                  <td colSpan="4" className="px-6 py-12 text-center text-gray-500">
-                    {searchQuery ? 'No terms found matching your search.' : 'No literary terms yet. Click "Add New Term" to create one.'}
-                  </td>
-                </tr>
-              ) : (
-                filteredTerms.map(term => (
-                  <tr key={term._id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4">
-                      <div className="font-medium text-gray-900">{term.title}</div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-1 text-sm text-gray-600">
-                        <Hash size={14} />{term.slug}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="text-sm text-gray-600 line-clamp-2 max-w-md">{term.excerpt}</div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center justify-end gap-2">
-                        <button onClick={() => openModal(term)}
-                     className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer" title="Edit">
-                          <Edit2 size={18} />
-                        </button>
-                        <button onClick={() => handleDelete(term)} disabled={deleting === term._id}
-                     className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer disabled:opacity-40" title="Delete">
-                          {deleting === term._id
-                            ? <Loader2 size={18} className="animate-spin" />
-                            : <Trash2 size={18} />
-                          }
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* Modal */}
-      {showModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between rounded-t-xl">
-              <h2 className="text-xl font-bold text-gray-900">
-                {editingTerm ? 'Edit Literary Term' : 'Add New Literary Term'}
-              </h2>
-              <button onClick={closeModal} className="p-2 hover:bg-gray-100 rounded-lg cursor-pointer">
-                <X size={20} />
+      {/* Tabs Navigation Bar */}
+      <section className="bg-[#b5d56a] sticky top-16 z-40">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <nav className="flex gap-8 py-4">
+            {tabs.map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`text-base font-medium transition-colors pb-1 ${
+                  activeTab === tab
+                    ? 'text-[#07294e] border-b-2 border-[#07294e]'
+                    : 'text-[#07294e]/70 hover:text-[#07294e]'
+                }`}
+              >
+                {tab}
               </button>
-            </div>
+            ))}
+          </nav>
+        </div>
+      </section>
 
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
-              {/* Title */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Title <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={formData.title}
-                  onChange={e => handleTitleChange(e.target.value)}
-             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#07294e] outline-none"
-                  placeholder="e.g., Metaphor"
-                />
-              </div>
+      {/* Main Content */}
+      <section className="py-8 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
 
-              {/* Slug */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Slug <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={formData.slug}
-                  onChange={e => setFormData({ ...formData, slug: e.target.value })}
-             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#07294e] outline-none"
-                  placeholder="e.g., metaphor"
-                />
-                <p className="mt-1 text-xs text-gray-500">Auto-generated from title. URL-friendly (lowercase, no spaces).</p>
-              </div>
+            {/* Main Content Area */}
+            <main className="lg:col-span-9">
 
-              {/* Excerpt */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Excerpt <span className="text-red-500">*</span>
-                </label>
-                <textarea
-                  required
-                  value={formData.excerpt}
-                  onChange={e => setFormData({ ...formData, excerpt: e.target.value })}
-                  rows={3}
-             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#07294e] outline-none resize-none"
-                  placeholder="Brief description of the term..."
-                />
-              </div>
+              {/* Definition Tab Content */}
+              {activeTab === 'Definition' && (
+                <>
+                  {/* What is {Term}? */}
+                  <div className="mb-10">
+                    <h2 className="text-2xl font-bold text-[#07294e] mb-4">
+                      What is {term.title}?
+                    </h2>
 
-              {/* Content */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Content</label>
-                <RichTextEditor
-                  value={formData.content}
-                  onChange={val => setFormData({ ...formData, content: val })}
-                  placeholder="Write the full definition and explanation here..."
-                />
-                <p className="mt-1 text-xs text-gray-500">Use the toolbar to format your content.</p>
-              </div>
+                    {term.definition && (
+                      <div
+                        className="prose prose-lg max-w-none text-gray-800 leading-relaxed mb-4"
+                        dangerouslySetInnerHTML={{ __html: term.definition }}
+                      />
+                    )}
 
-              {/* Buttons */}
-              <div className="flex items-center justify-end gap-3 pt-2">
-                <button type="button" onClick={closeModal}
-             className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer">
-                  Cancel
-                </button>
-                <button type="submit" disabled={saving}
-             className="inline-flex items-center gap-2 px-4 py-2 bg-[#07294e] text-white rounded-lg hover:bg-[#0a3461] transition-colors disabled:opacity-50 cursor-pointer">
-                  {saving
-                    ? <><Loader2 size={16} className="animate-spin" />Saving...</>
-                    : <><Save size={16} />{editingTerm ? 'Update Term' : 'Create Term'}</>
-                  }
-                </button>
+                    {term.excerpt && !term.definition && (
+                      <p className="text-gray-800 leading-relaxed text-[15px] mb-4">
+                        {term.excerpt}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Simplified Definition Box */}
+                  {(term.simplified_definition || term.simplifiedDefinition) && (
+                    <div className="bg-[#f4f4f4] border-l-4 border-[#b5d56a] p-6 mb-10">
+                      <h3 className="text-xl font-bold text-[#07294e] mb-3">
+                        {term.title} Definition (Simplified)
+                      </h3>
+                      <p className="text-gray-800 leading-relaxed text-[15px]">
+                        {term.simplified_definition || term.simplifiedDefinition}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Main Content from Database - only show if it is different */}
+                  {term.content && term.content !== term.definition && (
+                    <div className="mb-10 prose prose-lg max-w-none">
+                      <div
+                        className="text-gray-800 leading-relaxed"
+                        dangerouslySetInnerHTML={{ __html: term.content }}
+                      />
+                    </div>
+                  )}
+                </>
+              )}
+
+              {/* Examples Tab Content */}
+              {activeTab === 'Examples' && (
+                <div className="mb-10">
+                  <h2 className="text-2xl font-bold text-[#07294e] mb-4">
+                    Examples of {term.title}
+                  </h2>
+
+                  {term.examples ? (
+                    <div
+                      className="text-gray-800 leading-relaxed prose prose-lg max-w-none"
+                      dangerouslySetInnerHTML={{ __html: term.examples }}
+                    />
+                  ) : (
+                    <p className="text-gray-600 italic">
+                      Examples will be available soon.
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* Function Tab Content */}
+              {activeTab === 'Function' && (
+                <div className="mb-10">
+                  <h2 className="text-2xl font-bold text-[#07294e] mb-4">
+                    Function of {term.title}
+                  </h2>
+
+                  {term.function ? (
+                    <div
+                      className="text-gray-800 leading-relaxed prose prose-lg max-w-none"
+                      dangerouslySetInnerHTML={{ __html: term.function }}
+                    />
+                  ) : (
+                    <p className="text-gray-600 italic">
+                      Function information will be available soon.
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* Resources Tab Content */}
+              {activeTab === 'Resources' && (
+                <div className="mb-10">
+                  <h2 className="text-2xl font-bold text-[#07294e] mb-4">
+                    Resources for {term.title}
+                  </h2>
+
+                  {term.resources ? (
+                    <div
+                      className="text-gray-800 leading-relaxed prose prose-lg max-w-none"
+                      dangerouslySetInnerHTML={{ __html: term.resources }}
+                    />
+                  ) : (
+                    <p className="text-gray-600 italic">
+                      Additional resources will be available soon.
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* Detailed Sections fallback for hardcoded data */}
+              {activeTab === 'Definition' && term.detailedSections && term.detailedSections.map((section, index) => (
+                <div key={index} className="mb-10">
+                  <h2 className="text-2xl font-bold text-[#07294e] mb-4">
+                    {section.heading}
+                  </h2>
+
+                  {section.content.map((contentBlock, idx) => (
+                    <div key={idx} className="mb-4">
+                      {contentBlock.type === 'paragraph' && (
+                        <p className="text-gray-800 leading-relaxed text-[15px] mb-4">
+                          {contentBlock.text}
+                        </p>
+                      )}
+
+                      {contentBlock.type === 'list' && (
+                        <ul className="list-disc list-outside space-y-3 text-gray-800 ml-6 mb-4">
+                          {contentBlock.items.map((item, itemIdx) => (
+                            <li key={itemIdx} className="leading-relaxed text-[15px] pl-2">
+                              {item}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </main>
+
+            {/* Right Sidebar - Related Terms & Upgrade */}
+            <aside className="lg:col-span-3">
+              <div className="sticky top-32 space-y-6">
+
+                {/* Search Bar */}
+                <div className="bg-white border-2 border-[#b5d56a] rounded-lg p-4 shadow-sm">
+                  <form onSubmit={handleSearch} className="relative">
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Search"
+                      className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#b5d56a] focus:border-transparent text-gray-700 placeholder-gray-400"
+                    />
+
+                    <button
+                      type="submit"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 hover:bg-gray-100 rounded-md transition-colors"
+                      aria-label="Search"
+                    >
+                      <Search className="w-5 h-5 text-gray-500" />
+                    </button>
+                  </form>
+                </div>
+
+                {/* Upgrade to Literary Palace Plus */}
+                <div
+                  className="relative bg-[#f4f4f4] border-2 border-[#b5d56a] p-6 flex flex-col justify-between
+                  opacity-0 translate-y-5 animate-[fadeUp_0.6s_ease-out_forwards]"
+                >
+                  <div>
+                    <h3 className="text-xl md:text-2xl mt-4 -mb-2 font-bold text-[#07294e] text-center">
+                      Upgrade to
+                    </h3>
+
+                    <div className="flex items-center justify-center mb-3">
+                      <div className="relative inline-block">
+                        <Image
+                          src="/Logo Icons/Literary Palace SVG-01.svg"
+                          alt="Literary Palace"
+                          width={160}
+                          height={50}
+                          className="h-10 w-auto object-contain"
+                        />
+
+                        <span className="absolute top-2 right-4 text-[11px] md:text-[11px] font-merriweather text-[#07294e] uppercase">
+                          PLUS
+                        </span>
+                      </div>
+                    </div>
+
+                    <p className="text-sm text-gray-600 mb-2 text-center">
+                      Download clear Literary Terms PDFs, definitions, examples,
+                      and analysis for quick study.
+                    </p>
+
+                    <Image
+                      src="/A+ Icon-01.svg"
+                      alt="A+"
+                      width={56}
+                      height={56}
+                      className="absolute top-2 right-1 h-11 w-11 object-contain z-30"
+                    />
+
+                    <div className="flex items-center justify-center mb-6">
+                      <Image
+                        src="/UpgradeToLP-01.svg"
+                        alt="Upgrade illustration"
+                        width={170}
+                        height={170}
+                        className="w-55 h-auto object-contain"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="text-center">
+                    <button className="bg-[#07294e] text-white px-6 py-2 rounded-lg font-medium hover:bg-[#0a3a6b] transition-colors cursor-pointer">
+                      Download
+                    </button>
+                  </div>
+                </div>
+
+                {/* Can't find the insight you need? */}
+                <div className="bg-[#b5d56a] py-7 px-6 w-full flex flex-col items-center justify-center text-[#07294e] shadow-sm">
+                  <p className="text-sm font-medium mb-5">
+                    Can&apos;t find the insight you need?
+                  </p>
+                  <button className="bg-[#07294e] text-white px-4 py-2 rounded-md text-sm font-medium hover:opacity-95 transition cursor-pointer -mb-2">
+                    Request for Insight
+                  </button>
+                </div>
+
+                {/* Related Literary Terms */}
+                {term.relatedTerms && term.relatedTerms.length > 0 && (
+                  <div className="overflow-hidden rounded-lg border border-gray-200 shadow-sm">
+                    <div className="bg-[#07294e] px-4 py-2">
+                      <h3 className="text-sm font-semibold text-white">
+                        Related Literary Terms
+                      </h3>
+                    </div>
+
+                    <div className="bg-white">
+                      {term.relatedTerms.map((relatedTerm, index) => (
+                        <Link
+                          key={index}
+                          href={`/literary-terms/${relatedTerm.slug}`}
+                          className="block text-sm text-[#07294e] px-4 py-2 border-t border-[#eaf3d8] hover:bg-white transition-colors"
+                        >
+                          {relatedTerm.name}
+                        </Link>
+                      ))}
+                    </div>
+
+                    <div className="p-2 bg-white">
+                      <Link
+                        href="/literary-terms"
+                        className="block text-center bg-[#b5d56a] text-[#07294e] px-3 py-2 rounded-sm font-semibold hover:bg-[#a0c555] transition-colors"
+                      >
+                        See All Literary Terms
+                      </Link>
+                    </div>
+                  </div>
+                )}
+
+                {/* Popular Literary Terms */}
+                <div className="overflow-hidden rounded-lg border border-gray-200 shadow-sm mt-6">
+                  <div className="bg-[#07294e] px-4 py-2">
+                    <h3 className="text-sm font-semibold text-white">
+                      Popular Literary Terms
+                    </h3>
+                  </div>
+
+                  <div className="bg-white">
+                    {(term.popularTerms && term.popularTerms.length > 0
+                      ? term.popularTerms
+                      : popularTermsFallback
+                    ).map((popTerm, idx) => (
+                      <Link
+                        key={idx}
+                        href={`/literary-terms/${popTerm.slug}`}
+                        className="block text-sm text-[#07294e] px-4 py-2 border-t border-[#eaf3d8] hover:bg-white transition-colors"
+                      >
+                        {popTerm.name}
+                      </Link>
+                    ))}
+                  </div>
+
+                  <div className="p-2 bg-white">
+                    <Link
+                      href="/literary-terms"
+                      className="block text-center bg-[#b5d56a] text-[#07294e] px-3 py-2 rounded-sm font-semibold hover:bg-[#a0c555] transition-colors"
+                    >
+                      See All Literary Terms
+                    </Link>
+                  </div>
+                </div>
               </div>
-            </form>
+            </aside>
+
           </div>
         </div>
-      )}
-    </div>
+      </section>
+
+      <Footer />
+    </>
   );
-}
+};
+
+export default LiteraryTermDetail;
