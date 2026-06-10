@@ -84,7 +84,6 @@ export default function DashboardPage() {
       });
 
       if (result.success) {
-        // Remove instantly from UI after successful toggle.
         setBookmarks((prev) =>
           prev.filter(
             (bookmark) =>
@@ -105,119 +104,123 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="max-w-6xl mx-auto px-6 py-10">
-        Loading saved articles...
+      <div className="min-h-screen bg-[#f7f9ee]">
+        <div className="max-w-6xl mx-auto px-6 py-10 text-[#07294e] font-semibold">
+          Loading saved articles...
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-6 py-10">
-      {toast && (
-        <div
-          className={`fixed right-5 top-24 z-[9999] rounded-xl px-4 py-3 text-sm font-semibold shadow-xl ${
-            toast.type === "success"
-              ? "bg-green-600 text-white"
-              : "bg-red-600 text-white"
-          }`}
-        >
-          {toast.message}
+    <div className="min-h-screen bg-[#f7f9ee]">
+      <div className="max-w-7xl mx-auto px-6 py-10">
+        {toast && (
+          <div
+            className={`fixed right-5 top-24 z-[9999] rounded-xl px-4 py-3 text-sm font-semibold shadow-xl ${
+              toast.type === "success"
+                ? "bg-[#b5d56a] text-[#07294e]"
+                : "bg-red-600 text-white"
+            }`}
+          >
+            {toast.message}
+          </div>
+        )}
+
+        <div className="mb-6">
+          <button
+            type="button"
+            onClick={() => router.back()}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#07294e] text-white hover:bg-[#b5d56a] hover:text-[#07294e] transition-all duration-200 shadow-md font-semibold"
+          >
+            ← Back
+          </button>
         </div>
-      )}
 
-      <div className="mb-6">
-        <button
-          type="button"
-          onClick={() => router.back()}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#07294e] text-white hover:bg-[#0a3a6b] transition-all duration-200 shadow-md"
-        >
-          ← Back
-        </button>
-      </div>
+        <div className="mb-10">
+          <h1 className="text-4xl font-extrabold text-[#07294e] mb-2">
+            My Dashboard
+          </h1>
 
-      <div className="mb-10">
-        <h1 className="text-4xl font-extrabold text-[#07294e] mb-2">
-          My Dashboard
-        </h1>
-
-        <p className="text-gray-500">
-          All your bookmarked articles in one place.
-        </p>
-      </div>
-
-      {bookmarks.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-gray-300 bg-white p-10 text-center">
-          <p className="text-gray-500">No saved articles yet.</p>
+          <p className="text-[#52616f] font-medium">
+            All your bookmarked articles in one place.
+          </p>
         </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
-          {bookmarks.map((item) => {
-            const bookmarkKey = item._id || item.articleId || item.slug;
-            const isRemoving = removingId === bookmarkKey;
 
-            return (
-              <Link
-                key={bookmarkKey}
-                href={getArticleUrl(item)}
-                className="group relative overflow-hidden rounded-2xl border-2 border-[#b5d56a] bg-white hover:shadow-2xl transition-all duration-300 hover:-translate-y-1"
-              >
-                {/* Remove Button */}
-                <button
-                  type="button"
-                  aria-label={`Remove ${item.title} from bookmarks`}
-                  disabled={isRemoving}
-                  onClick={(event) => handleRemoveBookmark(event, item)}
-                  className="absolute right-4 top-4 z-30 rounded-full bg-red-50 p-2 text-red-600 shadow-sm transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-60"
+        {bookmarks.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-[#b5d56a] bg-white p-10 text-center shadow-sm">
+            <p className="text-[#52616f] font-medium">No saved articles yet.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+            {bookmarks.map((item) => {
+              const bookmarkKey = item._id || item.articleId || item.slug;
+              const isRemoving = removingId === bookmarkKey;
+
+              return (
+                <Link
+                  key={bookmarkKey}
+                  href={getArticleUrl(item)}
+                  className="group relative overflow-hidden rounded-2xl border border-[#d7e8a3] bg-white shadow-md hover:shadow-2xl transition-all duration-300 hover:-translate-y-1"
                 >
-                  {isRemoving ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Trash2 className="h-4 w-4" />
-                  )}
-                </button>
+                  {/* Remove Button */}
+                  <button
+                    type="button"
+                    aria-label={`Remove ${item.title} from bookmarks`}
+                    disabled={isRemoving}
+                    onClick={(event) => handleRemoveBookmark(event, item)}
+                    className="absolute right-4 top-4 z-30 rounded-full bg-[#fff1f1] p-2 text-red-600 shadow-sm transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {isRemoving ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Trash2 className="h-4 w-4" />
+                    )}
+                  </button>
 
-                {/* Left Accent */}
-                <div className="absolute left-0 top-0 bottom-0 w-3 bg-[#b5d56a]" />
+                  {/* Left Accent */}
+                  <div className="absolute left-0 top-0 bottom-0 w-3 bg-[#b5d56a]" />
 
-                {/* Background Logo */}
-                <div className="absolute right-0 bottom-0 opacity-5 pointer-events-none">
-                  <Image
-                    src="/Logo Icons/Literary Palace SVG Icon-01.svg"
-                    alt=""
-                    width={128}
-                    height={128}
-                    className="w-32 h-32 object-contain"
-                  />
-                </div>
+                  {/* Background Logo */}
+                  <div className="absolute right-0 bottom-0 opacity-[0.06] pointer-events-none">
+                    <Image
+                      src="/Logo Icons/Literary Palace SVG Icon-01.svg"
+                      alt=""
+                      width={128}
+                      height={128}
+                      className="w-32 h-32 object-contain"
+                    />
+                  </div>
 
-                <div className="p-5 pl-7 pr-14 relative z-10">
-                  <span className="inline-block mb-3 px-3 py-1 rounded-full text-xs font-bold bg-[#b5d56a] text-[#07294e]">
-                    {item.articleType}
-                  </span>
-
-                  <h3 className="text-xl font-bold text-[#07294e] group-hover:text-[#0a3a6b] transition-colors">
-                    {item.title}
-                  </h3>
-
-                  <p className="mt-2 text-sm text-gray-500">
-                    {item.category || item.articleType}
-                  </p>
-
-                  <div className="mt-4 flex items-center justify-between">
-                    <span className="text-xs text-gray-400">
-                      Saved Article
+                  <div className="p-5 pl-7 pr-14 relative z-10">
+                    <span className="inline-block mb-3 px-3 py-1 rounded-full text-xs font-bold bg-[#eef7cf] text-[#07294e] border border-[#b5d56a]">
+                      {item.articleType}
                     </span>
 
-                    <div className="px-3 py-1 rounded-full text-xs font-bold bg-[#07294e] text-white">
-                      View →
+                    <h3 className="text-xl font-bold text-[#07294e] group-hover:text-[#486800] transition-colors">
+                      {item.title}
+                    </h3>
+
+                    <p className="mt-2 text-sm text-[#52616f] font-medium">
+                      {item.category || item.articleType}
+                    </p>
+
+                    <div className="mt-4 flex items-center justify-between">
+                      <span className="text-xs text-[#7c8a95] font-semibold">
+                        Saved Article
+                      </span>
+
+                      <div className="px-3 py-1 rounded-full text-xs font-bold bg-[#07294e] text-white group-hover:bg-[#b5d56a] group-hover:text-[#07294e] transition-all duration-200">
+                        View →
+                      </div>
                     </div>
                   </div>
-                </div>
-              </Link>
-            );
-          })}
-        </div>
-      )}
+                </Link>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
