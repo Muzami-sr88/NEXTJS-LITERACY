@@ -40,21 +40,21 @@ function RichEditor({ value, onChange }) {
         ref={ref}
         contentEditable
         onInput={() => onChange(ref.current?.innerHTML || '')}
-   className="min-h-[200px] p-3 text-sm outline-none prose prose-sm max-w-none"
+        className="min-h-[200px] p-3 text-sm text-gray-800 bg-white outline-none prose prose-sm max-w-none"
         suppressContentEditableWarning
       />
     </div>
   );
 }
 
-
-
 function toLines(value) {
   return Array.isArray(value) ? value.join('\n') : '';
 }
+
 function fromLines(value) {
   return String(value || '').split(/\n+/).map(x => x.trim()).filter(Boolean);
 }
+
 function emptyLiteratureContent() {
   return {
     introduction: { body: [] },
@@ -68,6 +68,7 @@ function emptyLiteratureContent() {
     themeWheel: { body: [], themes: [] },
   };
 }
+
 function normalizeLiteratureContent(value) {
   const c = value && typeof value === 'object' && !Array.isArray(value) ? value : {};
   return {
@@ -91,7 +92,7 @@ function SmallButton({ children, onClick, danger = false }) {
     <button
       type="button"
       onClick={onClick}
- className={`px-3 py-1.5 rounded-lg text-xs font-semibold ${danger ? 'bg-red-50 text-red-600 hover:bg-red-100' : 'bg-[#b5d56a] text-[#07294e] hover:opacity-90'}`}
+      className={`px-3 py-1.5 rounded-lg text-xs font-semibold ${danger ? 'bg-red-50 text-red-600 hover:bg-red-100' : 'bg-[#b5d56a] text-[#07294e] hover:opacity-90'}`}
     >
       {children}
     </button>
@@ -102,7 +103,7 @@ function TextInput(props) {
   return (
     <input
       {...props}
- className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#07294e]"
+      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800 bg-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[#07294e]"
     />
   );
 }
@@ -111,7 +112,7 @@ function TextArea(props) {
   return (
     <textarea
       {...props}
- className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#07294e] resize-y"
+      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800 bg-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[#07294e] resize-y"
     />
   );
 }
@@ -132,46 +133,56 @@ function LiteratureContentEditor({ value, onChange }) {
   const content = normalizeLiteratureContent(value);
 
   const update = (next) => onChange(normalizeLiteratureContent(next));
+
   const setTextArray = (section, key, text) => {
     update({ ...content, [section]: { ...content[section], [key]: fromLines(text) } });
   };
+
   const addArrayItem = (key, item) => update({ ...content, [key]: [...(content[key] || []), item] });
+
   const updateArrayItem = (key, index, patch) => {
     const next = [...(content[key] || [])];
     next[index] = { ...next[index], ...patch };
     update({ ...content, [key]: next });
   };
+
   const removeArrayItem = (key, index) => {
     const next = [...(content[key] || [])];
     next.splice(index, 1);
     update({ ...content, [key]: next });
   };
+
   const updateChapter = (index, patch) => {
     const chapters = [...content.summaryAnalysis.chapters];
     chapters[index] = { ...chapters[index], ...patch };
     update({ ...content, summaryAnalysis: { chapters } });
   };
+
   const removeChapter = (index) => {
     const chapters = [...content.summaryAnalysis.chapters];
     chapters.splice(index, 1);
     update({ ...content, summaryAnalysis: { chapters } });
   };
+
   const addChapter = () => update({
     ...content,
     summaryAnalysis: {
       chapters: [...content.summaryAnalysis.chapters, { title: '', summary: '', analysis: '' }],
     },
   });
+
   const updateWheelTheme = (index, patch) => {
     const themes = [...content.themeWheel.themes];
     themes[index] = { ...themes[index], ...patch };
     update({ ...content, themeWheel: { ...content.themeWheel, themes } });
   };
+
   const removeWheelTheme = (index) => {
     const themes = [...content.themeWheel.themes];
     themes.splice(index, 1);
     update({ ...content, themeWheel: { ...content.themeWheel, themes } });
   };
+
   const addWheelTheme = () => update({
     ...content,
     themeWheel: { ...content.themeWheel, themes: [...content.themeWheel.themes, { label: '', color: '#07294e', pct: 0 }] },
@@ -190,7 +201,10 @@ function LiteratureContentEditor({ value, onChange }) {
       <Block title="Summary & Analysis Dropdown Options" note="Admin adds dynamic chapter options. Each chapter appears under the fixed Summary & Analysis dropdown.">
         {content.summaryAnalysis.chapters.map((chapter, index) => (
           <div key={index} className="bg-white border border-gray-200 rounded-xl p-3 space-y-2">
-            <div className="flex justify-between gap-2"><b className="text-xs text-gray-500">Chapter {index + 1}</b><SmallButton danger onClick={() => removeChapter(index)}>Remove</SmallButton></div>
+            <div className="flex justify-between gap-2">
+              <b className="text-xs text-gray-500">Chapter {index + 1}</b>
+              <SmallButton danger onClick={() => removeChapter(index)}>Remove</SmallButton>
+            </div>
             <TextInput placeholder="Dropdown option title e.g. Chapter 1" value={chapter.title || ''} onChange={e => updateChapter(index, { title: e.target.value })} />
             <TextArea rows={3} placeholder="Summary" value={chapter.summary || ''} onChange={e => updateChapter(index, { summary: e.target.value })} />
             <TextArea rows={3} placeholder="Analysis" value={chapter.analysis || ''} onChange={e => updateChapter(index, { analysis: e.target.value })} />
@@ -202,7 +216,10 @@ function LiteratureContentEditor({ value, onChange }) {
       <Block title="Themes Dropdown Options" note="Dynamic theme options under fixed Themes tab.">
         {content.themes.map((item, index) => (
           <div key={index} className="bg-white border border-gray-200 rounded-xl p-3 space-y-2">
-            <div className="flex justify-between"><b className="text-xs text-gray-500">Theme {index + 1}</b><SmallButton danger onClick={() => removeArrayItem('themes', index)}>Remove</SmallButton></div>
+            <div className="flex justify-between">
+              <b className="text-xs text-gray-500">Theme {index + 1}</b>
+              <SmallButton danger onClick={() => removeArrayItem('themes', index)}>Remove</SmallButton>
+            </div>
             <div className="grid md:grid-cols-[1fr_120px] gap-2">
               <TextInput placeholder="Dropdown option title e.g. The American Dream" value={item.title || ''} onChange={e => updateArrayItem('themes', index, { title: e.target.value })} />
               <TextInput type="color" value={item.color || '#07294e'} onChange={e => updateArrayItem('themes', index, { color: e.target.value })} />
@@ -216,7 +233,10 @@ function LiteratureContentEditor({ value, onChange }) {
       <Block title="Quotes" note="Fixed Quotes tab. These show as quote cards.">
         {content.quotes.map((item, index) => (
           <div key={index} className="bg-white border border-gray-200 rounded-xl p-3 space-y-2">
-            <div className="flex justify-between"><b className="text-xs text-gray-500">Quote {index + 1}</b><SmallButton danger onClick={() => removeArrayItem('quotes', index)}>Remove</SmallButton></div>
+            <div className="flex justify-between">
+              <b className="text-xs text-gray-500">Quote {index + 1}</b>
+              <SmallButton danger onClick={() => removeArrayItem('quotes', index)}>Remove</SmallButton>
+            </div>
             <TextArea rows={2} placeholder="Quote text" value={item.quote || ''} onChange={e => updateArrayItem('quotes', index, { quote: e.target.value })} />
             <div className="grid md:grid-cols-3 gap-2">
               <TextInput placeholder="Attribution" value={item.attribution || ''} onChange={e => updateArrayItem('quotes', index, { attribution: e.target.value })} />
@@ -231,7 +251,10 @@ function LiteratureContentEditor({ value, onChange }) {
       <Block title="Characters Dropdown Options" note="Dynamic character options under fixed Characters dropdown.">
         {content.characters.map((item, index) => (
           <div key={index} className="bg-white border border-gray-200 rounded-xl p-3 space-y-2">
-            <div className="flex justify-between"><b className="text-xs text-gray-500">Character {index + 1}</b><SmallButton danger onClick={() => removeArrayItem('characters', index)}>Remove</SmallButton></div>
+            <div className="flex justify-between">
+              <b className="text-xs text-gray-500">Character {index + 1}</b>
+              <SmallButton danger onClick={() => removeArrayItem('characters', index)}>Remove</SmallButton>
+            </div>
             <div className="grid md:grid-cols-[1fr_1fr_120px] gap-2">
               <TextInput placeholder="Dropdown option name e.g. Gatsby" value={item.name || ''} onChange={e => updateArrayItem('characters', index, { name: e.target.value })} />
               <TextInput placeholder="Role" value={item.role || ''} onChange={e => updateArrayItem('characters', index, { role: e.target.value })} />
@@ -246,7 +269,10 @@ function LiteratureContentEditor({ value, onChange }) {
       <Block title="Terms Dropdown Options" note="Dynamic term options under fixed Terms dropdown.">
         {content.terms.map((item, index) => (
           <div key={index} className="bg-white border border-gray-200 rounded-xl p-3 space-y-2">
-            <div className="flex justify-between"><b className="text-xs text-gray-500">Term {index + 1}</b><SmallButton danger onClick={() => removeArrayItem('terms', index)}>Remove</SmallButton></div>
+            <div className="flex justify-between">
+              <b className="text-xs text-gray-500">Term {index + 1}</b>
+              <SmallButton danger onClick={() => removeArrayItem('terms', index)}>Remove</SmallButton>
+            </div>
             <TextInput placeholder="Dropdown option term" value={item.term || ''} onChange={e => updateArrayItem('terms', index, { term: e.target.value })} />
             <TextArea rows={3} placeholder="Definition / explanation" value={item.def || ''} onChange={e => updateArrayItem('terms', index, { def: e.target.value })} />
           </div>
@@ -257,7 +283,10 @@ function LiteratureContentEditor({ value, onChange }) {
       <Block title="Symbols Dropdown Options" note="Dynamic symbol options under fixed Symbols dropdown.">
         {content.symbols.map((item, index) => (
           <div key={index} className="bg-white border border-gray-200 rounded-xl p-3 space-y-2">
-            <div className="flex justify-between"><b className="text-xs text-gray-500">Symbol {index + 1}</b><SmallButton danger onClick={() => removeArrayItem('symbols', index)}>Remove</SmallButton></div>
+            <div className="flex justify-between">
+              <b className="text-xs text-gray-500">Symbol {index + 1}</b>
+              <SmallButton danger onClick={() => removeArrayItem('symbols', index)}>Remove</SmallButton>
+            </div>
             <div className="grid md:grid-cols-[1fr_120px] gap-2">
               <TextInput placeholder="Dropdown option symbol e.g. Green Light" value={item.symbol || ''} onChange={e => updateArrayItem('symbols', index, { symbol: e.target.value })} />
               <TextInput type="color" value={item.color || '#07294e'} onChange={e => updateArrayItem('symbols', index, { color: e.target.value })} />
@@ -272,7 +301,10 @@ function LiteratureContentEditor({ value, onChange }) {
         <TextArea rows={3} placeholder="Theme wheel intro, one paragraph per line" value={toLines(content.themeWheel.body)} onChange={e => update({ ...content, themeWheel: { ...content.themeWheel, body: fromLines(e.target.value) } })} />
         {content.themeWheel.themes.map((item, index) => (
           <div key={index} className="bg-white border border-gray-200 rounded-xl p-3 space-y-2">
-            <div className="flex justify-between"><b className="text-xs text-gray-500">Wheel Item {index + 1}</b><SmallButton danger onClick={() => removeWheelTheme(index)}>Remove</SmallButton></div>
+            <div className="flex justify-between">
+              <b className="text-xs text-gray-500">Wheel Item {index + 1}</b>
+              <SmallButton danger onClick={() => removeWheelTheme(index)}>Remove</SmallButton>
+            </div>
             <div className="grid md:grid-cols-[1fr_120px_100px] gap-2">
               <TextInput placeholder="Label" value={item.label || ''} onChange={e => updateWheelTheme(index, { label: e.target.value })} />
               <TextInput type="color" value={item.color || '#07294e'} onChange={e => updateWheelTheme(index, { color: e.target.value })} />
@@ -292,9 +324,9 @@ export default function ContentManager({ title, apiEndpoint, fields, showCategor
   const [saving,    setSaving]    = useState(false);
   const [search,    setSearch]    = useState('');
   const [showModal, setShowModal] = useState(false);
-  const [editing,   setEditing]   = useState(null);  // null = create, object = edit
+  const [editing,   setEditing]   = useState(null);
   const [formData,  setFormData]  = useState({});
-  const [toast,     setToast]     = useState(null);  // {type, msg}
+  const [toast,     setToast]     = useState(null);
   const [deleting,  setDeleting]  = useState(null);
 
   const endpoint = `${API}/${apiEndpoint}`;
@@ -325,7 +357,9 @@ export default function ContentManager({ title, apiEndpoint, fields, showCategor
 
   function openCreate() {
     const blank = {};
-    fields.forEach(f => { blank[f.name] = f.type === 'literatureContent' ? emptyLiteratureContent() : (f.default || ''); });
+    fields.forEach(f => {
+      blank[f.name] = f.type === 'literatureContent' ? emptyLiteratureContent() : (f.default || '');
+    });
     setEditing(null);
     setFormData(blank);
     setShowModal(true);
@@ -333,7 +367,9 @@ export default function ContentManager({ title, apiEndpoint, fields, showCategor
 
   function openEdit(item) {
     const data = {};
-    fields.forEach(f => { data[f.name] = f.type === 'literatureContent' ? normalizeLiteratureContent(item[f.name]) : (item[f.name] ?? ''); });
+    fields.forEach(f => {
+      data[f.name] = f.type === 'literatureContent' ? normalizeLiteratureContent(item[f.name]) : (item[f.name] ?? '');
+    });
     setEditing(item);
     setFormData(data);
     setShowModal(true);
@@ -365,7 +401,6 @@ export default function ContentManager({ title, apiEndpoint, fields, showCategor
     }
   }
 
-  // Auto-generate slug from title
   function handleTitleChange(val) {
     setFormData(prev => ({
       ...prev,
@@ -385,9 +420,11 @@ export default function ContentManager({ title, apiEndpoint, fields, showCategor
 
       const res  = await fetch(url, { method, headers: authHeaders(), body: JSON.stringify(formData) });
       const contentType = res.headers.get('content-type') || '';
+
       if (!contentType.includes('application/json')) {
         throw new Error('Backend returned HTML/non-JSON response. Check route URL and backend server.');
       }
+
       const json = await res.json();
 
       if (!json.success) throw new Error(json.message || 'Save failed');
@@ -442,19 +479,23 @@ export default function ContentManager({ title, apiEndpoint, fields, showCategor
           <h1 className="text-3xl font-bold text-[#07294e]">{title}</h1>
           <p className="text-sm text-gray-500 mt-1">{items.length} total items</p>
         </div>
-        <button type="button" onClick={openCreate}
-     className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#07294e] text-white rounded-xl font-semibold text-sm hover:bg-[#0a3461] transition-colors cursor-pointer shadow">
+        <button
+          type="button"
+          onClick={openCreate}
+          className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#07294e] text-white rounded-xl font-semibold text-sm hover:bg-[#0a3461] transition-colors cursor-pointer shadow"
+        >
           <Plus className="w-4 h-4" /> Add New
         </button>
       </div>
 
       {/* Search */}
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 w-4 h-4" />
         <input
-          value={search} onChange={e => setSearch(e.target.value)}
+          value={search}
+          onChange={e => setSearch(e.target.value)}
           placeholder={`Search ${title.toLowerCase()}...`}
-     className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#07294e] bg-white"
+          className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-xl text-sm text-gray-800 bg-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[#07294e]"
         />
       </div>
 
@@ -506,12 +547,21 @@ export default function ContentManager({ title, apiEndpoint, fields, showCategor
                     </td>
                     <td className="px-5 py-4 text-right">
                       <div className="flex items-center justify-end gap-1">
-                        <button type="button" onClick={() => openEdit(item)}
-                     className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer" title="Edit">
+                        <button
+                          type="button"
+                          onClick={() => openEdit(item)}
+                          className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
+                          title="Edit"
+                        >
                           <Edit2 className="w-4 h-4" />
                         </button>
-                        <button type="button" onClick={() => handleDelete(item)} disabled={deleting === item._id}
-                     className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors cursor-pointer disabled:opacity-50" title="Delete">
+                        <button
+                          type="button"
+                          onClick={() => handleDelete(item)}
+                          disabled={deleting === item._id}
+                          className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors cursor-pointer disabled:opacity-50"
+                          title="Delete"
+                        >
                           {deleting === item._id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
                         </button>
                       </div>
@@ -546,9 +596,14 @@ export default function ContentManager({ title, apiEndpoint, fields, showCategor
                     </label>
 
                     {field.name === 'title' ? (
-                      <input type="text" required value={formData.title || ''} onChange={e => handleTitleChange(e.target.value)}
+                      <input
+                        type="text"
+                        required
+                        value={formData.title || ''}
+                        onChange={e => handleTitleChange(e.target.value)}
                         placeholder={field.placeholder || `Enter ${field.label.toLowerCase()}`}
-                   className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#07294e]" />
+                        className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm text-gray-800 bg-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[#07294e]"
+                      />
                     ) : field.type === 'literatureContent' ? (
                       <LiteratureContentEditor
                         value={formData[field.name]}
@@ -557,15 +612,24 @@ export default function ContentManager({ title, apiEndpoint, fields, showCategor
                     ) : field.type === 'richtext' ? (
                       <RichEditor value={formData[field.name] || ''} onChange={v => setFormData(p => ({...p, [field.name]: v}))} />
                     ) : field.type === 'textarea' ? (
-                      <textarea rows={field.rows || 4} required={field.required}
-                        value={formData[field.name] || ''} onChange={e => setFormData(p => ({...p, [field.name]: e.target.value}))}
-                        placeholder={field.placeholder}
-                   className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#07294e] resize-none" />
-                    ) : field.type === 'select' ? (
-                      <select required={field.required} value={formData[field.name] || ''}
+                      <textarea
+                        rows={field.rows || 4}
+                        required={field.required}
+                        value={formData[field.name] || ''}
                         onChange={e => setFormData(p => ({...p, [field.name]: e.target.value}))}
-                   className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#07294e] bg-white">
-                        <option value="">Select {field.label}</option>
+                        placeholder={field.placeholder}
+                        className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm text-gray-800 bg-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[#07294e] resize-none"
+                      />
+                    ) : field.type === 'select' ? (
+                      <select
+                        required={field.required}
+                        value={formData[field.name] || ''}
+                        onChange={e => setFormData(p => ({...p, [field.name]: e.target.value}))}
+                        className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-[#07294e]"
+                      >
+                        <option value="" className="text-gray-500">
+                          Select {field.label}
+                        </option>
                         {field.options?.map(o => <option key={o} value={o}>{o}</option>)}
                       </select>
                     ) : field.type === 'image' ? (
@@ -578,7 +642,7 @@ export default function ContentManager({ title, apiEndpoint, fields, showCategor
                               width={80}
                               height={80}
                               unoptimized
-                         className="w-20 h-20 rounded-lg object-cover border"
+                              className="w-20 h-20 rounded-lg object-cover border"
                             />
                             <div className="flex-1 min-w-0">
                               <p className="text-xs font-semibold text-gray-700">Current image</p>
@@ -590,40 +654,53 @@ export default function ContentManager({ title, apiEndpoint, fields, showCategor
                             <ImageIcon className="w-4 h-4" /> No image selected
                           </div>
                         )}
+
                         <label className="inline-flex items-center gap-2 px-4 py-2 bg-[#b5d56a] text-[#07294e] rounded-xl text-sm font-semibold cursor-pointer hover:opacity-90">
                           <Upload className="w-4 h-4" /> Upload Image
                           <input
                             type="file"
                             accept="image/*"
-                       className="hidden"
+                            className="hidden"
                             onChange={e => handleImageUpload(field.name, e.target.files?.[0])}
                           />
                         </label>
+
                         <input
                           type="text"
                           value={formData[field.name] || ''}
                           onChange={e => setFormData(p => ({...p, [field.name]: e.target.value}))}
                           placeholder="/uploads/images/example.jpg or external image URL"
-                     className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#07294e]"
+                          className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm text-gray-800 bg-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[#07294e]"
                         />
                       </div>
                     ) : (
-                      <input type={field.type || 'text'} required={field.required}
-                        value={formData[field.name] || ''} onChange={e => setFormData(p => ({...p, [field.name]: e.target.value}))}
+                      <input
+                        type={field.type || 'text'}
+                        required={field.required}
+                        value={formData[field.name] || ''}
+                        onChange={e => setFormData(p => ({...p, [field.name]: e.target.value}))}
                         placeholder={field.placeholder || `Enter ${field.label.toLowerCase()}`}
-                   className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#07294e]" />
+                        className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm text-gray-800 bg-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[#07294e]"
+                      />
                     )}
                   </div>
                 ))}
               </div>
 
               <div className="flex gap-3 pt-2">
-                <button type="submit" disabled={saving}
-             className="inline-flex items-center gap-2 px-6 py-2.5 bg-[#07294e] text-white rounded-xl font-semibold text-sm hover:bg-[#0a3461] transition-colors disabled:opacity-50 cursor-pointer">
+                <button
+                  type="submit"
+                  disabled={saving}
+                  className="inline-flex items-center gap-2 px-6 py-2.5 bg-[#07294e] text-white rounded-xl font-semibold text-sm hover:bg-[#0a3461] transition-colors disabled:opacity-50 cursor-pointer"
+                >
                   {saving ? <><Loader2 className="w-4 h-4 animate-spin"/>Saving...</> : <><Save className="w-4 h-4"/>{editing ? 'Update' : 'Create'}</>}
                 </button>
-                <button type="button" onClick={closeModal}
-             className="px-6 py-2.5 border border-gray-300 text-gray-700 rounded-xl font-semibold text-sm hover:bg-gray-50 transition-colors cursor-pointer">
+
+                <button
+                  type="button"
+                  onClick={closeModal}
+                  className="px-6 py-2.5 border border-gray-300 text-gray-700 rounded-xl font-semibold text-sm hover:bg-gray-50 transition-colors cursor-pointer"
+                >
                   Cancel
                 </button>
               </div>
